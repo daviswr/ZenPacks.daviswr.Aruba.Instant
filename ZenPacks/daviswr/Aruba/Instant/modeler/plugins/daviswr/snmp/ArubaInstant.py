@@ -140,15 +140,15 @@ class ArubaInstant(SnmpPlugin):
         log.debug('aiWlanSSIDTable has %s entries', len(aiWlanSSIDTable))
 
         manufacturer = 'Aruba Networks'
-        os = 'ArubaOS'
+        os = 'InstantOS'
         sys_ver = ''
 
         # Example:
         # ArubaOS (MODEL: 224), Version 8.6.0.6-8.6.0.6
-        sysdescr_re = r'(.+) \(.+: (.+)\),? Version (.+)'
+        sysdescr_re = r'.+ (.+)\),? Version (.+)'
         match = re.match(sysdescr_re, getdata.get('sysDescr', ''))
         if match:
-            (os, getdata['model'], sys_ver) = match.groups()
+            (getdata['model'], sys_ver) = match.groups()
 
         sw_version = getdata.get('version', sys_ver)
         os = '{0} {1}'.format(os, sw_version.split('-')[0]) if sw_version \
