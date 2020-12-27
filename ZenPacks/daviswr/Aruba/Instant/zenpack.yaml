@@ -5,7 +5,7 @@ class_relationships:
   - AccessPoint(iapRadios) 1:MC AccessPointRadio(clusterIAP)
   - VirtualController(iapNetwork) 1:MC Network(iapController)
   # Stand-alone AP
-  - VirtualController(iapRadios) 1:MC AccessPointRadio(iapController)
+  - VirtualController(iapRadios) 1:MC AccessPointRadio(instantAP)
   # May be supported in the future:
   # - AccessPointRadio(iapNetworks) M:M Network(iapRadios)
 
@@ -44,11 +44,6 @@ classes:
         grid_display: false
         details_display: true
 
-  # InstantAccessPoint:
-  #   base: [VirtualController]
-  #   label: Instant Access Point
-  #   short_label: IAP
-
   AccessPoint:
     label: Access Point
     short_label: AP
@@ -84,8 +79,8 @@ classes:
         label: Model
         grid_display: true
         order: 1
-        label_width: 115
-        content_width: 115
+        label_width: 35
+        content_width: 35
       # AI-AP-MIB::aiAPMemoryFree
       totalMemory:
         type: int
@@ -108,12 +103,18 @@ classes:
       role:
         label: Role
         type: string
+        label_width: 70
+        content_width: 70
         grid_display: true
         details_display: true
 
   AccessPointRadio:
     label: Access Point Radio
     short_label: Radio
+    relationships:
+      instantAP:
+        grid_display: false
+        details_display: false
     properties:
       # AI-AP-MIB::aiRadioMACAddress
       mac:
@@ -127,13 +128,17 @@ classes:
         label: Channel Number
         short_label: Channel
         grid_display: true
-        order: 3
+        order: 12
         label_width: 90
         content_width: 90
+        label_width: 35
+        content_width: 35
       width:
         label: Bandwidth
         short_label: Width
-        order: 4
+        order: 13
+        label_width: 45
+        content_width: 45
       band:
         label: RF Band
         short_label: Band
@@ -144,6 +149,9 @@ classes:
         short_label: GHz
         grid_display: true
         details_display: false
+        order: 11
+        label_width: 35
+        content_width: 35
       # AI-AP-MIB::aiRadioStatus
       enabled:
         label: Enabled
@@ -161,7 +169,7 @@ classes:
         short_label: Clients
         type: int
         datapoint: aiRadioClientNum_aiRadioClientNum
-        order: 20
+        order: 15
         label_width: 35
         content_width: 35
         grid_display: true
@@ -184,6 +192,7 @@ classes:
         renderer: Zenoss.render.severity
         grid_display: true
         details_display: false
+        order: 10
         label_width: 35
         content_width: 35
       # AI-AP-MIB::aiSSIDClientNum
@@ -194,6 +203,7 @@ classes:
         grid_display: true
         details_display: false
         datapoint: aiSSIDClientNum_aiSSIDClientNum
+        order: 12
         label_width: 35
         content_width: 35
       # AI-AP-MIB::aiSSIDHide
@@ -204,6 +214,7 @@ classes:
         renderer: Zenoss.render.severity
         grid_display: true
         details_display: false
+        order: 11
         label_width: 45
         content_width: 45
 
@@ -236,10 +247,10 @@ device_classes:
     remove: true
     zProperties:
       zCollectorPlugins:
-        - daviswr.snmp.ArubaInstant
         - zenoss.snmp.DeviceMap
         - zenoss.snmp.InterfaceMap
         - zenoss.snmp.SnmpV3EngineIdMap
+        - daviswr.snmp.ArubaInstant
       zPythonClass: ZenPacks.daviswr.Aruba.Instant.VirtualController
 
     templates:

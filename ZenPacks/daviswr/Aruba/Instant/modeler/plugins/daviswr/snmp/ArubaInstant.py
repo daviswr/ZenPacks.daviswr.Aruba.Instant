@@ -139,7 +139,7 @@ class ArubaInstant(SnmpPlugin):
         aiWlanSSIDTable = tabledata.get('aiWlanSSIDTable')
         log.debug('aiWlanSSIDTable has %s entries', len(aiWlanSSIDTable))
 
-        manufacturer = 'Aruba Networks Inc'
+        manufacturer = 'Aruba Networks'
         os = 'ArubaOS'
         sys_ver = ''
 
@@ -156,6 +156,7 @@ class ArubaInstant(SnmpPlugin):
         getdata['setOSProductKey'] = MultiArgs(os, manufacturer)
 
         vc_ap = getdata.get('vcRoleAP', '')
+        mgmt_ip = getdata.get('vcMgmtIP', '')
 
         force_controller = getattr(device, 'zIapForceController', False)
         force_standalone = getattr(device, 'zIapForceStandalone', False)
@@ -171,15 +172,15 @@ class ArubaInstant(SnmpPlugin):
             getdata['standalone'] = True
         else:
             # Determine if Virtual Controller or standalone AP
-            if ((device.manageIp == vc_ap and not getdata.get('vcMgmtIp', ''))
-                    or device.manageIp == getdata.get('vcMgmtIp', '')):
+            if (device.manageIp == mgmt_ip
+                    or (device.manageIp == vc_ap and not mgmt_ip)):
                 getdata['standalone'] = False
             else:
                 getdata['standalone'] = True
 
         use_case = 'an individual InstantAP' if getdata['standalone'] \
             else 'a Virtual Controller'
-        log.info('%s is %s', device.id, use_case)
+        log.info('Modeling %s as %s', device.id, use_case)
 
         # Can't assemble the ObjectMap yet, have to find VC AP in AP table
 
@@ -253,7 +254,7 @@ class ArubaInstant(SnmpPlugin):
                 log.debug('Skipping ignore checks for AP being modeled')
                 # Make this AP's info available as the Device
                 getdata.update(row)
-            elif getdata.get('standalone', False and ip != device.manageIp):
+            elif getdata.get('standalone', False) and ip != device.manageIp:
                 log.debug('Standalone model forced, skipping cluster members')
                 continue
             elif not name:
@@ -284,36 +285,37 @@ class ArubaInstant(SnmpPlugin):
             ap_index = '.'.join(snmpindex.split('.')[:-1]).strip('.')
             radio_index = snmpindex.replace(ap_index, '').strip('.')
 
-            # Enabled/disable value is the same as APs
-            for attr in attr_map:
-                if attr in row:
-                    row[attr] = attr_map[attr].get(row[attr], row[attr])
+            if ap_index in ap_radios:
+                # Enabled/disable value is the same as APs
+                for attr in attr_map:
+                    if attr in row:
+                        row[attr] = attr_map[attr].get(row[attr], row[attr])
 
-            channel = row.get('channel', '')
-            width_code = channel[-1]
-            row['width'] = '{0} MHz'.format(width_map.get(width_code, 20))
-            row['channel'] = channel[:-1] if width_code in width_map \
-                else channel
+                channel = row.get('channel', '')
+                width_code = channel[-1]
+                row['width'] = '{0} MHz'.format(width_map.get(width_code, 20))
+                row['channel'] = channel[:-1] if width_code in width_map \
+                    else channel
 
-            row['band'] = 'Unknown'
-            row['band_short'] = '?'
-            if row['channel'].isdigit():
-                if int(row['channel']) in range(1, 15):
-                    row['band'] = '2.4 GHz'
-                elif int(row['channel']) in range(32, 174):
-                    row['band'] = '5 GHz'
-                row['band_short'] = row['band'].replace(' GHz', '')
+                row['band'] = 'Unknown'
+                row['band_short'] = '?'
+                if row['channel'].isdigit():
+                    if int(row['channel']) in range(1, 15):
+                        row['band'] = '2.4 GHz'
+                    elif int(row['channel']) in range(32, 174):
+                        row['band'] = '5 GHz'
+                    row['band_short'] = row['band'].replace(' GHz', '')
 
-            if 'mac' in row:
-                row['mac'] = self.asmac(row['mac'])
+                if 'mac' in row:
+                    row['mac'] = self.asmac(row['mac'])
 
-            log.debug(
-                'Found radio %s for AP index %s',
-                radio_index,
-                ap_index
-                )
-            row['snmpindex'] = snmpindex.strip('.')
-            ap_radios[ap_index][radio_index] = row
+                log.debug(
+                    'Found radio %s for AP index %s',
+                    radio_index,
+                    ap_index
+                    )
+                row['snmpindex'] = snmpindex.strip('.')
+                ap_radios[ap_index][radio_index] = row
 
         # Wireless Networks
         wlan_list = list()
@@ -347,6 +349,9 @@ class ArubaInstant(SnmpPlugin):
             manufacturer
             )
         getdata['setHWSerialNumber'] = getdata.get('serial', '')
+        # Prevent Virtual Controller device from
+        #  getting title of its self-AP component
+        del getdata['title']
 
         maps.append(ObjectMap(
             modname='ZenPacks.daviswr.Aruba.Instant.VirtualController',
@@ -369,31 +374,36 @@ class ArubaInstant(SnmpPlugin):
                 ))
         maps.append(wlan_rm)
 
+        ap_rm = RelationshipMap(
+            relname='clusterIAPs',
+            modname='ZenPacks.daviswr.Aruba.Instant.AccessPoint'
+            )
+
+        standalone_radio_rm = RelationshipMap(
+            relname='iapRadios',
+            modname='ZenPacks.daviswr.Aruba.Instant.AccessPointRadio'
+            )
+
         # Model as standalone AP - Only radios as components
         if getdata.get('standalone', False):
             ap = getdata
-            radio_rm = RelationshipMap(
-                relname='iapRadios',
-                modname='ZenPacks.daviswr.Aruba.Instant.AccessPointRadio'
-                )
 
             for radio_index in ap_radios[ap['snmpindex']]:
                 radio = ap_radios[ap['snmpindex']][radio_index]
                 radio['id'] = self.prepId('Radio_{0}'.format(radio_index))
                 radio['title'] = 'Radio {0}'.format(radio_index)
-                radio_rm.append(ObjectMap(
+                standalone_radio_rm.append(ObjectMap(
                     modname='ZenPacks.daviswr.Aruba.Instant.AccessPointRadio',
                     data=radio
                     ))
-            maps.append(radio_rm)
+            maps.append(standalone_radio_rm)
+            # Need empty AP RelMap to remove lingering APs
+            # if previously modeled as a Controller
+            maps.append(ap_rm)
 
         # Model as Virtual Controller - APs as components
         else:
             radio_rm_list = list()
-            ap_rm = RelationshipMap(
-                relname='clusterIAPs',
-                modname='ZenPacks.daviswr.Aruba.Instant.AccessPoint'
-                )
 
             for ap_name in aps:
                 ap = aps[ap_name]
@@ -427,6 +437,9 @@ class ArubaInstant(SnmpPlugin):
                 radio_rm_list.append(radio_rm)
             maps.append(ap_rm)
             maps += radio_rm_list
+            # Need empty Radio RelMap to remove lingering Radios
+            # if previously modeled as a standalone AP
+            maps.append(standalone_radio_rm)
 
         log.debug('%s RelMaps:\n%s', self.name(), str(maps))
 
