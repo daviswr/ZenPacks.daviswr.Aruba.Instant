@@ -1,13 +1,13 @@
 name: ZenPacks.daviswr.Aruba.Instant
 
 class_relationships:
-  - VirtualController(clusterIAPs) 1:MC AccessPoint(iapController)
-  - AccessPoint(iapRadios) 1:MC AccessPointRadio(clusterIAP)
-  - VirtualController(iapNetwork) 1:MC Network(iapController)
+  - VirtualController(clusterIAPs) 1:MC InstantAP(iapController)
+  - InstantAP(iapRadios) 1:MC InstantRadio(clusterIAP)
+  - VirtualController(iapNetwork) 1:MC InstantNetwork(iapController)
   # Stand-alone AP
-  - VirtualController(iapRadios) 1:MC AccessPointRadio(instantAP)
+  - VirtualController(iapRadios) 1:MC InstantRadio(instantAP)
   # May be supported in the future:
-  # - AccessPointRadio(iapNetworks) M:M Network(iapRadios)
+  # - InstantRadio(iapNetworks) M:M InstantNetwork(iapRadios)
 
 classes:
   DEFAULTS:
@@ -44,9 +44,9 @@ classes:
         grid_display: false
         details_display: true
 
-  AccessPoint:
-    label: Access Point
-    short_label: AP
+  InstantAP:
+    label: Instant AP
+    short_label: IAP
     relationships:
       iapRadios:
         grid_display: false
@@ -60,25 +60,28 @@ classes:
         label: MAC Address
         short_label: MAC
         type: string
+        order: 14
         grid_display: false
         details_display: true
       # AI-AP-MIB::aiAPIPAddress
       ip:
         label: IP Address
         grid_display: true
-        order: 5
+        order: 13
         label_width: 90
         content_width: 90
       # AI-AP-MIB::aiAPSerialNum
       serial:
         label: Serial Number
         short_label: Serial
-        order: 2
+        order: 12
+        details_display: true
       # AI-AP-MIB::aiAPModelName
       model:
         label: Model
         grid_display: true
-        order: 1
+        details_display: true
+        order: 11
         label_width: 35
         content_width: 35
       # AI-AP-MIB::aiAPMemoryFree
@@ -86,6 +89,7 @@ classes:
         type: int
         label: Memory
         renderer: Zenoss.render.bytesString
+        order: 15
         details_display: true
       # AI-AP-MIB::aaiAPStatus
       enabled:
@@ -103,14 +107,15 @@ classes:
       role:
         label: Role
         type: string
-        label_width: 70
-        content_width: 70
+        label_width: 85
+        content_width: 85
+        order: 16
         grid_display: true
         details_display: true
 
-  AccessPointRadio:
-    label: Access Point Radio
-    short_label: Radio
+  InstantRadio:
+    label: Instant AP Radio
+    short_label: IAP Radio
     relationships:
       instantAP:
         grid_display: false
@@ -144,6 +149,7 @@ classes:
         short_label: Band
         grid_display: false
         details_display: true
+        order: 11
       band_short:
         label: Band
         short_label: GHz
@@ -181,8 +187,8 @@ classes:
         grid_display: false
         details_display: true
 
-  Network:
-    label: Network
+  InstantNetwork:
+    label: Instant Network
     properties:
       # AI-AP-MIB::aiSSIDStatus
       enabled:
@@ -294,7 +300,7 @@ device_classes:
             height: 100
             width: 500
             miny: 0
-          Controller CPU:
+          Instant AP CPU:
             units: percentage
             maxy: 100
             graphpoints:
@@ -303,7 +309,7 @@ device_classes:
                 lineType: AREA
                 stacked: true
                 colorindex: 0
-          Controller Memory:
+          Instant AP Memory:
             units: bytes
             base: true
             graphpoints:
@@ -317,9 +323,9 @@ device_classes:
               Free:
                 color: cccccc
 
-      # /Network/Aruba/Instant/AccessPoint
-      AccessPoint:
-        targetPythonClass: ZenPacks.daviswr.Aruba.Instant.AccessPoint
+      # /Network/Aruba/Instant/InstantAP
+      InstantAP:
+        targetPythonClass: ZenPacks.daviswr.Aruba.Instant.InstantAP
         datasources:
           DEFAULTS:
             type: SNMP
@@ -367,7 +373,7 @@ device_classes:
             height: 100
             width: 500
             miny: 0
-          AP CPU:
+          IAP CPU:
             units: percentage
             maxy: 100
             graphpoints:
@@ -376,7 +382,7 @@ device_classes:
                 lineType: AREA
                 stacked: true
                 colorindex: 0
-          AP Memory:
+          IAP Memory:
             units: bytes
             base: true
             graphpoints:
@@ -390,9 +396,9 @@ device_classes:
               Free:
                 color: cccccc
 
-      # /Network/Aruba/Instant/AccessPointRadio
-      AccessPointRadio:
-        targetPythonClass: ZenPacks.daviswr.Aruba.Instant.AccessPointRadio
+      # /Network/Aruba/Instant/InstantAPRadio
+      InstantAPRadio:
+        targetPythonClass: ZenPacks.daviswr.Aruba.Instant.InstantRadio
         datasources:
           DEFAULTS:
             type: SNMP
@@ -519,7 +525,7 @@ device_classes:
           DEFAULTS:
             height: 100
             width: 500
-          Associations:
+          Radio Associations:
             miny: 0
             units: clients
             graphpoints:
@@ -529,7 +535,7 @@ device_classes:
                 stacked: true
                 rpn: CEIL
                 colorindex: 0
-          Throughput:
+          Radio Throughput:
             miny: 0
             units: bits/sec
             base: true
@@ -546,7 +552,7 @@ device_classes:
                 lineWidth: 1
                 rpn: 8,*
                 colorindex: 1
-          Total Frames:
+          Radio Total Frames:
             miny: 0
             units: frames/sec
             graphpoints:
@@ -560,7 +566,7 @@ device_classes:
                 lineType: LINE
                 lineWidth: 1
                 colorindex: 1
-          Management Frames:
+          Radio Management Frames:
             miny: 0
             units: fames/sec
             graphpoints:
@@ -574,7 +580,7 @@ device_classes:
                 lineType: LINE
                 lineWidth: 1
                 colorindex: 1
-          Data Frames:
+          Radio Data Frames:
             miny: 0
             units: frames/sec
             graphpoints:
@@ -588,7 +594,7 @@ device_classes:
                 lineType: LINE
                 lineWidth: 1
                 colorindex: 1
-          Errors:
+          Radio Errors:
             miny: 0
             units: frames/sec
             graphpoints:
@@ -601,7 +607,7 @@ device_classes:
               Interfered:
                 dpName: aiRadioPhyEvents_aiRadioPhyEvents
                 colorindex: 1
-          Drops:
+          Radio Drops:
             miny: 0
             units: frames/sec
             graphpoints:
@@ -610,7 +616,7 @@ device_classes:
                 lineType: LINE
                 lineWidth: 2
                 colorindex: 1
-          Channel Utilization:
+          Radio Channel Utilization:
             miny: 0
             maxy: 100
             units: percentage
@@ -619,7 +625,7 @@ device_classes:
                 dpName: aiRadioUtilization64_aiRadioUtilization64
                 lineType: AREA
                 colorindex: 0
-          Transmit Power:
+          Radio Transmit Power:
             miny: 0
             units: dBm
             graphpoints:
@@ -628,7 +634,7 @@ device_classes:
                 lineType: LINE
                 lineWidth: 2
                 colorindex: 0
-          Noise Floor:
+          Radio Noise Floor:
             units: dBm
             graphpoints:
               Level:
@@ -638,8 +644,8 @@ device_classes:
                 rpn: "-1,*"
                 colorindex: 0
 
-      # /Network/Aruba/Instant/Network
-      Network:
+      # /Network/Aruba/Instant/InstantNetwork
+      InstantNetwork:
         targetPythonClass: ZenPacks.daviswr.Aruba.Instant.Network
         datasources:
           DEFAULTS:
@@ -674,7 +680,7 @@ device_classes:
             height: 100
             width: 500
             miny: 0
-          Associations:
+          Network Associations:
             miny: 0
             units: clients
             graphpoints:
