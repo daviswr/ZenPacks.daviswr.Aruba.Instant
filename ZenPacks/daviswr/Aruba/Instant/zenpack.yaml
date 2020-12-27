@@ -1,0 +1,672 @@
+name: ZenPacks.daviswr.Aruba.Instant
+
+class_relationships:
+  - VirtualController(clusterIAPs) 1:MC AccessPoint(iapController)
+  - AccessPoint(iapRadios) 1:MC AccessPointRadio(clusterIAP)
+  - VirtualController(iapNetwork) 1:MC Network(iapController)
+  # May be supported in the future:
+  # - AccessPointRadio(iapNetworks) M:M Network(iapRadios)
+
+classes:
+  DEFAULTS:
+    base: [zenpacklib.Component]
+
+  VirtualController:
+    base: [zenpacklib.Device]
+    label: Virtual Controller
+    short_label: Controller
+    properties:
+      DEFAULTS:
+        type: string
+        grid_display: true
+        details_display: true
+      snmpIdx:
+        type: string
+        grid_display: false
+        details_display: false
+      # AI-AP-MIB::aiVirtualControllerName.0
+      # Doesn't have to be an FQDN or hostname and
+      # shouldn't be assumed to match the Device name
+      vcName:
+        label: Controller Name
+        short_label: Name
+      # AI-AP-MIB::aiVirtualControllerIPAddress.0
+      vcMgmtIP:
+        label: Managment IP
+        short_label: Mgmt IP
+      # AI-AP-MIB::aiMasterIPAddress.0
+      vcRoleAP:
+        label: Controller AP
+        short_label: AP IP
+      # AI-AP-MIB::aiAPMACAddress
+      mac:
+        label: AP Address
+        short_label: MAC
+        type: string
+        grid_display: false
+        details_display: true
+
+  AccessPoint:
+    label: Access Point
+    short_label: AP
+    relationships:
+      iapRadios:
+        grid_display: false
+    properties:
+      DEFAULTS:
+        type: string
+        grid_display: false
+        details_display: true
+      # AI-AP-MIB::aiAPMACAddress
+      mac:
+        label: MAC Address
+        short_label: MAC
+        type: string
+        grid_display: false
+        details_display: true
+      # AI-AP-MIB::aiAPIPAddress
+      ip:
+        label: IP Address
+        grid_display: true
+        order: 5
+        label_width: 90
+        content_width: 90
+      # AI-AP-MIB::aiAPSerialNum
+      serial:
+        label: Serial Number
+        short_label: Serial
+        order: 2
+      # AI-AP-MIB::aiAPModelName
+      model:
+        label: Model
+        grid_display: true
+        order: 1
+        label_width: 115
+        content_width: 115
+      # AI-AP-MIB::aiAPMemoryFree
+      totalMemory:
+        type: int
+        label: Memory
+        renderer: Zenoss.render.bytesString
+        details_display: true
+      # AI-AP-MIB::aaiAPStatus
+      enabled:
+        label: Enabled
+        type: boolean
+        enum: {true: "clear", false: "debug"}
+        renderer: Zenoss.render.severity
+        grid_display: true
+        details_display: false
+        order: 10
+        label_width: 35
+        content_width: 35
+        details_display: false
+      # AI-AP-MIB::aiAPRole
+      role:
+        label: Role
+        type: string
+        grid_display: true
+        details_display: true
+
+  AccessPointRadio:
+    label: Access Point Radio
+    short_label: Radio
+    properties:
+      # AI-AP-MIB::aiRadioMACAddress
+      mac:
+        label: MAC Address
+        short_label: MAC
+        type: string
+        grid_display: false
+        details_display: true
+      # AI-AP-MIB::aiRadioChannel
+      channel:
+        label: Channel Number
+        short_label: Channel
+        grid_display: true
+        order: 3
+        label_width: 90
+        content_width: 90
+      width:
+        label: Bandwidth
+        short_label: Width
+        order: 4
+      band:
+        label: RF Band
+        short_label: Band
+        grid_display: false
+        details_display: true
+      band_short:
+        label: Band
+        short_label: GHz
+        grid_display: true
+        details_display: false
+      # AI-AP-MIB::aiRadioStatus
+      enabled:
+        label: Enabled
+        type: boolean
+        enum: {true: "clear", false: "debug"}
+        renderer: Zenoss.render.severity
+        order: 10
+        label_width: 35
+        content_width: 35
+        grid_display: true
+        details_display: false
+      # AI-AP-MIB::aiRadioClientNum
+      clients:
+        label: Clients
+        short_label: Clients
+        type: int
+        datapoint: aiRadioClientNum_aiRadioClientNum
+        order: 20
+        label_width: 35
+        content_width: 35
+        grid_display: true
+        details_display: false
+      # aiRadioMode
+      mode:
+        label: Mode
+        type: string
+        grid_display: false
+        details_display: true
+
+  Network:
+    label: Network
+    properties:
+      # AI-AP-MIB::aiSSIDStatus
+      enabled:
+        label: Enabled
+        type: boolean
+        enum: {true: "clear", false: "debug"}
+        renderer: Zenoss.render.severity
+        grid_display: true
+        details_display: false
+        label_width: 35
+        content_width: 35
+      # AI-AP-MIB::aiSSIDClientNum
+      clients:
+        label: Clients
+        short_label: Clients
+        type: int
+        grid_display: true
+        details_display: false
+        datapoint: aiSSIDClientNum_aiSSIDClientNum
+        label_width: 35
+        content_width: 35
+      # AI-AP-MIB::aiSSIDHide
+      broadcast:
+        label: Broadcast
+        type: boolean
+        enum: {true: "clear", false: "debug"}
+        renderer: Zenoss.render.severity
+        grid_display: true
+        details_display: false
+        label_width: 45
+        content_width: 45
+
+
+# Subset from ZenPacks.daviswr.Cisco.WLC
+zProperties:
+  DEFAULTS:
+    category: WLAN
+  zWlanApClientThreshold:
+    type: int
+    default: 64
+  zWlanApIgnoreNames:
+    type: string
+  zWlanApIgnoreSubnets:
+    type: lines
+  zWlanApIgnoreModels:
+    type: lines
+  zWlanWlanIgnoreNames:
+    type: string
+  # Aruba Instant specific
+  zIapForceController:
+    type: boolean
+  zIapForceStandalone:
+    type: boolean
+
+
+device_classes:
+  # Similar to ZenPacks.daviswr.Cisco.WLC
+  /Network/Aruba/Instant:
+    remove: true
+    zProperties:
+      zCollectorPlugins:
+        - daviswr.snmp.ArubaInstant
+        - zenoss.snmp.DeviceMap
+        - zenoss.snmp.InterfaceMap
+        - zenoss.snmp.SnmpV3EngineIdMap
+      zPythonClass: ZenPacks.daviswr.Aruba.Instant.VirtualController
+
+    templates:
+      # /Network/Aruba/Instant/Device
+      Device:
+        targetPythonClass: ZenPacks.daviswr.Aruba.Instant.VirtualController
+        datasources:
+          DEFAULTS:
+            type: SNMP
+          aiAPCPUUtilization:
+            # here.snmpindex seems to get appended if it exists
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.1.1.7
+            datapoints:
+              aiAPCPUUtilization:
+                description: Access Point CPU Utilization
+                rrdtype: GAUGE
+                aliases:
+                  # Compatibility with Zenoss CPU Utilization report
+                  # https://monitoringartist.github.io/community.zenoss.org/docs/DOC-3025.html
+                  cpu_pct: "0,+"
+          aiAPMemoryFree:
+            # here.snmpindex seems to get appended if it exists
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.1.1.8
+            datapoints:
+              aiAPMemoryFree:
+                description: Amount of memory free in the access point in bytes
+                rrdtype: GAUGE
+                aliases:
+                  freeMemory: "0,+"
+                  usedMemory: "-1,*,${here/hw/totalMemory},+"
+                  mem_pct: "-1,*,${here/hw/totalMemory},+,${here/hw/totalMemory},/,100,*"
+          sysUpTime:
+            oid: .1.3.6.1.2.1.1.3.0
+            datapoints:
+              sysUpTime:
+                description: The time (in hundredths of a second) since the network management portion of the system was last re-initialized
+                rrdtype: GAUGE
+
+        graphs:
+          DEFAULTS:
+            height: 100
+            width: 500
+            miny: 0
+          Controller CPU:
+            units: percentage
+            maxy: 100
+            graphpoints:
+              Utilization:
+                dpName: aiAPCPUUtilization_aiAPCPUUtilization
+                lineType: AREA
+                stacked: true
+                colorindex: 0
+          Controller Memory:
+            units: bytes
+            base: true
+            graphpoints:
+              DEFAULTS:
+                dpName: aiAPMemoryFree_aiAPMemoryFree
+                lineType: AREA
+                stacked: true
+              Used:
+                rpn: "-1,*,${here/hw/totalMemory},+"
+                colorindex: 0
+              Free:
+                color: cccccc
+
+      # /Network/Aruba/Instant/AccessPoint
+      AccessPoint:
+        targetPythonClass: ZenPacks.daviswr.Aruba.Instant.AccessPoint
+        datasources:
+          DEFAULTS:
+            type: SNMP
+          aiAPCPUUtilization:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.1.1.7
+            datapoints:
+              aiAPCPUUtilization:
+                description: Access Point CPU Utilization
+                rrdtype: GAUGE
+                aliases:
+                  # Compatibility with Zenoss CPU Utilization report
+                  # https://monitoringartist.github.io/community.zenoss.org/docs/DOC-3025.html
+                  cpu_pct: "0,+"
+          aiAPMemoryFree:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.1.1.8
+            datapoints:
+              aiAPMemoryFree:
+                description: Amount of memory free in the access point in bytes
+                rrdtype: GAUGE
+                aliases:
+                  freeMemory: "0,+"
+                  # Do TALES attributes work for components?
+                  usedMemory: "-1,*,${here/totalMemory},+"
+                  mem_pct: "-1,*,${here/totalMemory},+,${here/totalMemory},/,100,*"
+          aiAPStatus:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.1.1.11
+            datapoints:
+              aiAPStatus:
+                description: Indicates the Access Point Status
+                rrdtype: GAUGE
+
+        thresholds:
+          Status:
+            type: MinMaxThreshold
+            enabled: true
+            dsnames:
+              - aiAPStatus_aiAPStatus
+            severity: 3
+            eventClass: /Status/InstantAP
+            minval: 1
+            maxval: 1
+
+        graphs:
+          DEFAULTS:
+            height: 100
+            width: 500
+            miny: 0
+          AP CPU:
+            units: percentage
+            maxy: 100
+            graphpoints:
+              Utilization:
+                dpName: aiAPCPUUtilization_aiAPCPUUtilization
+                lineType: AREA
+                stacked: true
+                colorindex: 0
+          AP Memory:
+            units: bytes
+            base: true
+            graphpoints:
+              DEFAULTS:
+                dpName: aiAPMemoryFree_aiAPMemoryFree
+                lineType: AREA
+                stacked: true
+              Used:
+                rpn: "-1,*,${here/totalMemory},+"
+                colorindex: 0
+              Free:
+                color: cccccc
+
+      # /Network/Aruba/Instant/AccessPointRadio
+      AccessPointRadio:
+        targetPythonClass: ZenPacks.daviswr.Aruba.Instant.AccessPointRadio
+        datasources:
+          DEFAULTS:
+            type: SNMP
+          aiRadioTransmitPower:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.2.1.5
+            datapoints:
+              aiRadioTransmitPower:
+                description: Radio transmit power
+                rrdtype: GAUGE
+          aiRadioNoiseFloor:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.2.1.6
+            datapoints:
+              aiRadioNoiseFloor:
+                description: Radio noise floor in dBm
+                rrdtype: GAUGE
+          aiRadioUtilization64:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.2.1.8
+            datapoints:
+              aiRadioUtilization64:
+                description: Radio channel utilization 64 second average
+                rrdtype: GAUGE
+          aiRadioTxTotalFrames:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.2.1.9
+            datapoints:
+              aiRadioTxTotalFrames:
+                description: Total transmitted frames
+                rrdtype: DERIVE
+                rrdmin: 0
+          aiRadioTxMgmtFrames:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.2.1.10
+            datapoints:
+              aiRadioTxMgmtFrames:
+                description: Transmitted management frames
+                rrdtype: DERIVE
+                rrdmin: 0
+          aiRadioTxDataFrames:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.2.1.11
+            datapoints:
+              aiRadioTxDataFrames:
+                description: Transmitted data frames
+                rrdtype: DERIVE
+                rrdmin: 0
+          aiRadioTxDataBytes:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.2.1.12
+            datapoints:
+              aiRadioTxDataBytes:
+                description: Transmitted data bytes
+                rrdtype: DERIVE
+                rrdmin: 0
+          aiRadioTxDrops:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.2.1.13
+            datapoints:
+              aiRadioTxDrops:
+                description: Total frames dropped during transmission
+                rrdtype: DERIVE
+                rrdmin: 0
+          aiRadioRxTotalFrames:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.2.1.14
+            datapoints:
+              aiRadioRxTotalFrames:
+                description: Total received frames
+                rrdtype: DERIVE
+                rrdmin: 0
+          aiRadioRxDataFrames:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.2.1.15
+            datapoints:
+              aiRadioRxDataFrames:
+                description: Received data frames
+                rrdtype: DERIVE
+                rrdmin: 0
+          aiRadioRxDataBytes:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.2.1.16
+            datapoints:
+              aiRadioRxDataBytes:
+                description: Received data bytes
+                rrdtype: DERIVE
+                rrdmin: 0
+          aiRadioRxMgmtFrames:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.2.1.17
+            datapoints:
+              aiRadioRxMgmtFrames:
+                description: Received management frames
+                rrdtype: DERIVE
+                rrdmin: 0
+          aiRadioRxBad:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.2.1.18
+            datapoints:
+              aiRadioRxBad:
+                description: Frames received in error
+                rrdtype: DERIVE
+                rrdmin: 0
+          aiRadioPhyEvents:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.2.1.19
+            datapoints:
+              aiRadioPhyEvents:
+                description: Frames not received because of interference
+                rrdtype: DERIVE
+                rrdmin: 0
+          aiRadioStatus:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.2.1.20
+            datapoints:
+              aiRadioStatus:
+                description: Radio state of AP - UP/DOWN
+                rrdtype: GAUGE
+          aiRadioClientNum:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.2.2.1.21
+            datapoints:
+              aiRadioClientNum:
+                description: Client Number of per Radio
+                rrdtype: GAUGE
+
+        thresholds:
+          Status:
+            type: MinMaxThreshold
+            enabled: true
+            dsnames:
+              - aiRadioStatus_aiRadioStatus
+            severity: 3
+            eventClass: /Status/InstantAP
+            minval: 1
+            maxval: 1
+
+        graphs:
+          DEFAULTS:
+            height: 100
+            width: 500
+          Associations:
+            miny: 0
+            units: clients
+            graphpoints:
+              Clients:
+                dpName: aiRadioClientNum_aiRadioClientNum
+                lineType: AREA
+                stacked: true
+                rpn: CEIL
+                colorindex: 0
+          Throughput:
+            miny: 0
+            units: bits/sec
+            base: true
+            graphpoints:
+              Inbound:
+                dpName: aiRadioRxDataBytes_aiRadioRxDataBytes
+                lineType: AREA
+                stacked: true
+                rpn: "8,*"
+                colorindex: 0
+              Outbound:
+                dpName: aiRadioTxDataBytes_aiRadioTxDataBytes
+                lineType: LINE
+                lineWidth: 1
+                rpn: 8,*
+                colorindex: 1
+          Total Frames:
+            miny: 0
+            units: frames/sec
+            graphpoints:
+              Inbound:
+                dpName: aiRadioRxTotalFrames_aiRadioRxTotalFrames
+                lineType: AREA
+                stacked: true
+                colorindex: 0
+              Outbound:
+                dpName: aiRadioTxTotalFrames_aiRadioTxTotalFrames
+                lineType: LINE
+                lineWidth: 1
+                colorindex: 1
+          Management Frames:
+            miny: 0
+            units: fames/sec
+            graphpoints:
+              Inbound:
+                dpName: aiRadioRxMgmtFrames_aiRadioRxMgmtFrames
+                lineType: AREA
+                stacked: true
+                colorindex: 0
+              Outbound:
+                dpName: aiRadioTxMgmtFrames_aiRadioTxMgmtFrames
+                lineType: LINE
+                lineWidth: 1
+                colorindex: 1
+          Data Frames:
+            miny: 0
+            units: frames/sec
+            graphpoints:
+              Inbound:
+                dpName: aiRadioRxDataFrames_aiRadioRxDataFrames
+                lineType: AREA
+                stacked: true
+                colorindex: 0
+              Outbound:
+                dpName: aiRadioTxDataFrames_aiRadioTxDataFrames
+                lineType: LINE
+                lineWidth: 1
+                colorindex: 1
+          Errors:
+            miny: 0
+            units: frames/sec
+            graphpoints:
+              DEFAULTS:
+                lineType: LINE
+                lineWidth: 2
+              Input:
+                dpName: aiRadioRxBad_aiRadioRxBad
+                colorindex: 0
+              Interfered:
+                dpName: aiRadioPhyEvents_aiRadioPhyEvents
+                colorindex: 1
+          Drops:
+            miny: 0
+            units: frames/sec
+            graphpoints:
+              Output:
+                dpName: aiRadioTxDrops_aiRadioTxDrops
+                lineType: LINE
+                lineWidth: 2
+                colorindex: 1
+          Channel Utilization:
+            miny: 0
+            maxy: 100
+            units: percentage
+            graphpoints:
+              Utilization:
+                dpName: aiRadioUtilization64_aiRadioUtilization64
+                lineType: AREA
+                colorindex: 0
+          Transmit Power:
+            miny: 0
+            units: dBm
+            graphpoints:
+              Level:
+                dpName: aiRadioTransmitPower_aiRadioTransmitPower
+                lineType: LINE
+                lineWidth: 2
+                colorindex: 0
+          Noise Floor:
+            units: dBm
+            graphpoints:
+              Level:
+                dpName: aiRadioNoiseFloor_aiRadioNoiseFloor
+                lineType: LINE
+                lineWidth: 2
+                rpn: "-1,*"
+                colorindex: 0
+
+      # /Network/Aruba/Instant/Network
+      Network:
+        targetPythonClass: ZenPacks.daviswr.Aruba.Instant.Network
+        datasources:
+          DEFAULTS:
+            type: SNMP
+          aiSSIDStatus:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.1.7.1.3
+            datapoints:
+              aiSSIDStatus:
+                description: Indicates the whether the SSID is enabled(0) or disabled(1)
+                rrdtype: GAUGE
+          aiSSIDClientNum:
+            oid: .1.3.6.1.4.1.14823.2.3.3.1.1.7.1.4
+            datapoints:
+              aiSSIDClientNum:
+                description: Client Number of per SSID
+                rrdtype: GAUGE
+
+        thresholds:
+          Status:
+            type: MinMaxThreshold
+            enabled: true
+            dsnames:
+              - aiSSIDStatus_aiSSIDStatus
+            severity: 3
+            eventClass: /Status/InstantAP
+            # Unknown why this differs from AP & AP Radio status values
+            minval: 0
+            maxval: 0
+
+        graphs:
+          DEFAULTS:
+            height: 100
+            width: 500
+            miny: 0
+          Associations:
+            miny: 0
+            units: clients
+            graphpoints:
+              Clients:
+                dpName: aiSSIDClientNum_aiSSIDClientNum
+                lineType: AREA
+                stacked: true
+                rpn: CEIL
+                colorindex: 0
