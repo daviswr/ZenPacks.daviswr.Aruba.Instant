@@ -61,8 +61,6 @@ class ArubaInstant(SnmpPlugin):
         }
 
     aiRadioEntry = {
-        # aiRadioAPMACAddress
-        '.1': 'ap_mac',
         # aiRadioMACAddress
         '.3': 'mac',
         # aiRadioChannel
@@ -254,7 +252,6 @@ class ArubaInstant(SnmpPlugin):
                     or len(aiAccessPointTable) == 1):
                 log.debug('Skipping ignore checks for AP being modeled')
                 # Make this AP's info available as the Device
-                row['snmpIdx'] = row['snmpindex']
                 getdata.update(row)
             elif getdata.get('standalone', False and ip != device.manageIp):
                 log.debug('Standalone model forced, skipping cluster members')
@@ -307,9 +304,8 @@ class ArubaInstant(SnmpPlugin):
                     row['band'] = '5 GHz'
                 row['band_short'] = row['band'].replace(' GHz', '')
 
-            for mac in ['ap_mac', 'mac']:
-                if mac in row:
-                    row[mac] = self.asmac(row[mac])
+            if 'mac' in row:
+                row['mac'] = self.asmac(row['mac'])
 
             log.debug(
                 'Found radio %s for AP index %s',
@@ -337,12 +333,7 @@ class ArubaInstant(SnmpPlugin):
             log.debug('Found WLAN: %s', name)
 
             # Clean up attributes
-            booleans = [
-                'broadcast',
-                'enabled',
-                ]
-
-            for attr in booleans:
+            for attr in ['broadcast', 'enabled']:
                 if attr in row:
                     row[attr] = True if 0 == row[attr] else False
 
@@ -378,44 +369,64 @@ class ArubaInstant(SnmpPlugin):
                 ))
         maps.append(wlan_rm)
 
-        ap_rm = RelationshipMap(
-            relname='clusterIAPs',
-            modname='ZenPacks.daviswr.Aruba.Instant.AccessPoint'
-            )
-        radio_rm_list = list()
-
-        for ap_name in aps:
-            ap = aps[ap_name]
-            ap['id'] = self.prepId(ap_name)
-            ap_rm.append(ObjectMap(
-                modname='ZenPacks.daviswr.Aruba.Instant.AccessPoint',  # noqa
-                data=aps[ap_name]
-                ))
-
+        # Model as standalone AP - Only radios as components
+        if getdata.get('standalone', False):
+            ap = getdata
             radio_rm = RelationshipMap(
-                compname='clusterIAPs/{0}'.format(ap['id']),
                 relname='iapRadios',
                 modname='ZenPacks.daviswr.Aruba.Instant.AccessPointRadio'
                 )
 
             for radio_index in ap_radios[ap['snmpindex']]:
                 radio = ap_radios[ap['snmpindex']][radio_index]
-                radio['id'] = self.prepId('{0}_{1}'.format(
-                    ap['id'],
-                    radio_index
-                    ))
-                radio['title'] = '{0} Radio {1}'.format(
-                    ap_name,
-                    radio_index
-                    )
+                radio['id'] = self.prepId('Radio_{0}'.format(radio_index))
+                radio['title'] = 'Radio {0}'.format(radio_index)
                 radio_rm.append(ObjectMap(
-                    modname='ZenPacks.daviswr.Aruba.Instant.AccessPointRadio',  # noqa
+                    modname='ZenPacks.daviswr.Aruba.Instant.AccessPointRadio',
                     data=radio
                     ))
-            # Append this AP's radio RelMap
-            radio_rm_list.append(radio_rm)
-        maps.append(ap_rm)
-        maps += radio_rm_list
+            maps.append(radio_rm)
+
+        # Model as Virtual Controller - APs as components
+        else:
+            radio_rm_list = list()
+            ap_rm = RelationshipMap(
+                relname='clusterIAPs',
+                modname='ZenPacks.daviswr.Aruba.Instant.AccessPoint'
+                )
+
+            for ap_name in aps:
+                ap = aps[ap_name]
+                ap['id'] = self.prepId(ap_name)
+                ap_rm.append(ObjectMap(
+                    modname='ZenPacks.daviswr.Aruba.Instant.AccessPoint',  # noqa
+                    data=aps[ap_name]
+                    ))
+
+                radio_rm = RelationshipMap(
+                    compname='clusterIAPs/{0}'.format(ap['id']),
+                    relname='iapRadios',
+                    modname='ZenPacks.daviswr.Aruba.Instant.AccessPointRadio'
+                    )
+
+                for radio_index in ap_radios[ap['snmpindex']]:
+                    radio = ap_radios[ap['snmpindex']][radio_index]
+                    radio['id'] = self.prepId('{0}_{1}'.format(
+                        ap['id'],
+                        radio_index
+                        ))
+                    radio['title'] = '{0} Radio {1}'.format(
+                        ap_name,
+                        radio_index
+                        )
+                    radio_rm.append(ObjectMap(
+                        modname='ZenPacks.daviswr.Aruba.Instant.AccessPointRadio',  # noqa
+                        data=radio
+                        ))
+                # Append this AP's radio RelMap
+                radio_rm_list.append(radio_rm)
+            maps.append(ap_rm)
+            maps += radio_rm_list
 
         log.debug('%s RelMaps:\n%s', self.name(), str(maps))
 

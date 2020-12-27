@@ -4,6 +4,8 @@ class_relationships:
   - VirtualController(clusterIAPs) 1:MC AccessPoint(iapController)
   - AccessPoint(iapRadios) 1:MC AccessPointRadio(clusterIAP)
   - VirtualController(iapNetwork) 1:MC Network(iapController)
+  # Stand-alone AP
+  - VirtualController(iapRadios) 1:MC AccessPointRadio(iapController)
   # May be supported in the future:
   # - AccessPointRadio(iapNetworks) M:M Network(iapRadios)
 
@@ -20,10 +22,6 @@ classes:
         type: string
         grid_display: true
         details_display: true
-      snmpIdx:
-        type: string
-        grid_display: false
-        details_display: false
       # AI-AP-MIB::aiVirtualControllerName.0
       # Doesn't have to be an FQDN or hostname and
       # shouldn't be assumed to match the Device name
@@ -45,6 +43,11 @@ classes:
         type: string
         grid_display: false
         details_display: true
+
+  # InstantAccessPoint:
+  #   base: [VirtualController]
+  #   label: Instant Access Point
+  #   short_label: IAP
 
   AccessPoint:
     label: Access Point
