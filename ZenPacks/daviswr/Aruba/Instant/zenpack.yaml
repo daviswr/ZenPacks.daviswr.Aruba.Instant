@@ -405,7 +405,7 @@ device_classes:
                 colorindex: 0
               Free:
                 color: cccccc
-          Ping:
+          IAP Ping:
             units: milliseconds
             graphpoints:
               Time:
