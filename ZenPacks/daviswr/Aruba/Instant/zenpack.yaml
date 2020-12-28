@@ -356,6 +356,16 @@ device_classes:
               aiAPStatus:
                 description: Indicates the Access Point Status
                 rrdtype: GAUGE
+          nmap-ping:
+            type: COMMAND
+            # Parameters from ZenStatus.NmapPingTask._executeNmapCmd()
+            # There's *got* to be a better way to ping a component...
+            commandTemplate: "/bin/bash -c 'rta=$$($$ZENHOME/bin/nmap -sn -PE -n --send-ip --min-rtt-timeout 1.5 --max-rtt-timeout 1.5 --max-retries 3 ${here/ip} -oX - | grep srtt | cut -d\\\" -f2); if [ -z \"$$rta\" ]; then status=CRITICAL; else status=OK; fi; echo \"Ping $$status | rta=$$rta\"'"
+            parser: Nagios
+            cycletime: 60
+            component: "${here/id}"
+            datapoints:
+              rta: GAUGE
 
         thresholds:
           Status:
@@ -395,6 +405,16 @@ device_classes:
                 colorindex: 0
               Free:
                 color: cccccc
+          Ping:
+            units: milliseconds
+            graphpoints:
+              Time:
+                dpName: nmap-ping_rta
+                rpn: "1000,/"
+                format: "%5.2lf"
+                lineType: AREA
+                stacked: true
+                colorindex: 0
 
       # /Network/Aruba/Instant/InstantAPRadio
       InstantAPRadio:
