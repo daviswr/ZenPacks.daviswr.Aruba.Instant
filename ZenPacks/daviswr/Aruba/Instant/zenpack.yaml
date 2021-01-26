@@ -258,6 +258,7 @@ device_classes:
         - zenoss.snmp.SnmpV3EngineIdMap
         - daviswr.snmp.ArubaInstant
       zPythonClass: ZenPacks.daviswr.Aruba.Instant.VirtualController
+      zInterfaceMapIgnoreNames: "_id1$"
 
     templates:
       # /Network/Aruba/Instant/Device
@@ -347,7 +348,6 @@ device_classes:
                 rrdtype: GAUGE
                 aliases:
                   freeMemory: "0,+"
-                  # Do TALES attributes work for components?
                   usedMemory: "-1,*,${here/totalMemory},+"
                   mem_pct: "-1,*,${here/totalMemory},+,${here/totalMemory},/,100,*"
           aiAPStatus:
@@ -360,8 +360,6 @@ device_classes:
             type: COMMAND
             # Parameters from ZenStatus.NmapPingTask._executeNmapCmd()
             # There's *got* to be a better way to ping a component...
-            # commandTemplate: "/bin/bash -c 'rtt=$$($$ZENHOME/bin/nmap -sn -PE -n --send-ip --min-rtt-timeout 1.5 --max-rtt-timeout 1.5 --max-retries 3 ${here/ip} -oX - | grep srtt | cut -d\\\" -f2); if [ -z \"$$rtt\" ]; then status=CRITICAL; else status=OK; fi; echo \"Ping $$status | rtt=$$rtt\"'"
-            # parser: Nagios
             commandTemplate: "$$ZENHOME/bin/nmap -sn -PE -n --send-ip --min-rtt-timeout 1.5 --max-rtt-timeout 1.5 --max-retries 3 ${here/ip} -oX -"
             parser: ZenPacks.daviswr.Aruba.Instant.parsers.nmap
             cycletime: 60
