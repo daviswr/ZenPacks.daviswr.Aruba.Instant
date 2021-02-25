@@ -4,7 +4,7 @@ from zenoss.protocols.protobufs.zep_pb2 import SEVERITY_INFO
 ap_name = str(getattr(evt, 'wlsxTrapAPLocation.0', ''))
 radio = str(getattr(evt, 'wlsxTrapAPRadioNumber.0', ''))
 prev_chan = str(getattr(evt, 'wlsxTrapAPPrevChannel.0', ''))
-curr_chan = str(getattr(evt, 'wlsxTrapAPRadioNumber.0', ''))
+curr_chan = str(getattr(evt, 'wlsxTrapAPChannel.0', ''))
 reason = str(getattr(evt, 'wlsxTrapAPARMChangeReason.0', ''))
 
 # Re-model Virtual Controller to get new channel assignment
