@@ -366,6 +366,7 @@ device_classes:
             component: "${here/id}"
             datapoints:
               rtt: GAUGE
+              status: GAUGE
 
         thresholds:
           Status:
@@ -373,6 +374,15 @@ device_classes:
             enabled: true
             dsnames:
               - aiAPStatus_aiAPStatus
+            severity: 3
+            eventClass: /Status/ArubaInstant
+            minval: 1
+            maxval: 1
+          PingStatus:
+            type: MinMaxThreshold
+            enabled: true
+            dsnames:
+              - nmap-ping_status
             severity: 3
             eventClass: /Status/ArubaInstant
             minval: 1

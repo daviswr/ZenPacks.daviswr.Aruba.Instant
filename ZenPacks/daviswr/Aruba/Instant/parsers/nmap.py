@@ -53,9 +53,10 @@ class nmap(CommandParser):
             ping._isUp, reason = ping._parseState(host_tree[0])
             ping._rtt, ping._rttVariance = ping._parseTimes(host_tree[0])
 
-            # AP status polling and Virtual Controller trap
-            # will inform if the AP is down, so no real need
-            # to worry about up/down state here
+            # AP status polling should inform if the AP is down,
+            # though the up/clear event may not be reliable.
+            # AP up/down traps from the Virtual Controller lack AP name
+            # and therefore aren't of much use.
             values['rtt'] = ping.rtt
             values['status'] = 1
         else:
