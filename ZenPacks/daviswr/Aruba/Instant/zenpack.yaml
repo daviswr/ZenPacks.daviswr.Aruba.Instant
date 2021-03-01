@@ -3,7 +3,7 @@ name: ZenPacks.daviswr.Aruba.Instant
 class_relationships:
   - VirtualController(clusterIAPs) 1:MC InstantAP(iapController)
   - InstantAP(iapRadios) 1:MC InstantRadio(clusterIAP)
-  - VirtualController(iapNetwork) 1:MC InstantNetwork(iapController)
+  - VirtualController(iapNetworks) 1:MC InstantNetwork(iapController)
   # Stand-alone AP
   - VirtualController(iapRadios) 1:MC InstantRadio(instantAP)
   # May be supported in the future:

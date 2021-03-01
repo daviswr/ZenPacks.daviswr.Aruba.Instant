@@ -367,7 +367,7 @@ class ArubaInstant(SnmpPlugin):
                 ))
 
         wlan_rm = RelationshipMap(
-            relname='iapNetwork',
+            relname='iapNetworks',
             modname='ZenPacks.daviswr.Aruba.Instant.InstantNetwork'
             )
         for wlan in wlan_list:
