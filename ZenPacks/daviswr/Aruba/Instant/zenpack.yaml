@@ -564,6 +564,7 @@ device_classes:
                 lineType: AREA
                 stacked: true
                 rpn: CEIL
+                format: "%5.0lf"
                 colorindex: 0
           Radio Throughput:
             miny: 0
@@ -719,6 +720,7 @@ device_classes:
                 lineType: AREA
                 stacked: true
                 rpn: CEIL
+                format: "%5.0lf"
                 colorindex: 0
 
 
