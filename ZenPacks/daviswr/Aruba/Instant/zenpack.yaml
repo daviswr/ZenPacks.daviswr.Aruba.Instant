@@ -420,7 +420,6 @@ device_classes:
             graphpoints:
               Time:
                 dpName: nmap-ping_rtt
-                rpn: "1000,/"
                 format: "%5.2lf"
                 lineType: AREA
                 stacked: true
@@ -561,7 +560,8 @@ device_classes:
             graphpoints:
               Clients:
                 dpName: aiRadioClientNum_aiRadioClientNum
-                lineType: AREA
+                lineType: LINE
+                lineWidth: 2
                 stacked: true
                 rpn: CEIL
                 format: "%5.0lf"
@@ -646,7 +646,7 @@ device_classes:
                 dpName: aiRadioTxDrops_aiRadioTxDrops
                 lineType: LINE
                 lineWidth: 2
-                colorindex: 1
+                colorindex: 0
           Radio Channel Utilization:
             miny: 0
             maxy: 100
@@ -717,7 +717,8 @@ device_classes:
             graphpoints:
               Clients:
                 dpName: aiSSIDClientNum_aiSSIDClientNum
-                lineType: AREA
+                lineType: LINE
+                lineWidth: 2
                 stacked: true
                 rpn: CEIL
                 format: "%5.0lf"
