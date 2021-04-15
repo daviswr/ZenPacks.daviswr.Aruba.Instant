@@ -10,6 +10,9 @@ Tested with IAP-224 APs in Virtual Controller mode with InstantOS 8.6
 HPE/Aruba Networks Instant Access Points (not campus APs) with SNMP enabled and accessible from Zenoss.
  * This includes rebranded Aruba equipment from Dell, etc.
 
+Aruba Instant and Aruba MIBs loaded into Zenoss for decoding traps - This ZenPack does not include MIBs.
+ * See [https://asp.arubanetworks.com/downloads;products=Aruba%20Access%20Points;fileContents=MIB](https://asp.arubanetworks.com/downloads;products=Aruba%20Access%20Points;fileContents=MIB)
+
 ## Usage
 This ZenPack will add the `/Network/Aruba/Instant` device class, where Virtual Controllers and/or IAPs should be placed.
 
