@@ -8,8 +8,8 @@ curr_power = str(getattr(evt, 'wlsxTrapAPTxPower.0', ''))
 
 if ap_name:
     # Component
-    evt.component = '{0} Radio {1}'.format(ap_name, int(radio) - 1) if radio \
-        else ap_name
+    evt.component = ('{0} Radio {1}'.format(ap_name, int(radio) - 1) if radio
+                     else ap_name)
 
     # Severity
     evt.severity = SEVERITY_INFO

@@ -50,8 +50,8 @@ if ap_name:
         }
 
     # Component
-    evt.component = '{0} Radio {1}'.format(ap_name, int(radio) - 1) \
-        if radio and radio.isdigit() else ap_name
+    evt.component = ('{0} Radio {1}'.format(ap_name, int(radio) - 1)
+                     if radio and radio.isdigit() else ap_name)
 
     # Severity
     evt.severity = SEVERITY_INFO
