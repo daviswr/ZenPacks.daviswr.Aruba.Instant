@@ -354,7 +354,8 @@ class ArubaInstant(SnmpPlugin):
         getdata['setHWSerialNumber'] = getdata.get('serial', '')
         # Prevent Virtual Controller device from
         # getting title of its self-AP component
-        del getdata['title']
+        if 'title' in getdata:
+            del getdata['title']
 
         maps.append(ObjectMap(
             modname='ZenPacks.daviswr.Aruba.Instant.VirtualController',
