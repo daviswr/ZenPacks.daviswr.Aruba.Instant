@@ -151,8 +151,8 @@ class ArubaInstant(SnmpPlugin):
             (getdata['model'], sys_ver) = match.groups()
 
         sw_version = getdata.get('version', sys_ver)
-        os = '{0} {1}'.format(os, sw_version.split('-')[0]) if sw_version \
-            else os
+        os = ('{0} {1}'.format(os, sw_version.split('-')[0]) if sw_version
+              else os)
         getdata['setOSProductKey'] = MultiArgs(os, manufacturer)
 
         vc_ap = getdata.get('vcRoleAP', '')
@@ -178,8 +178,8 @@ class ArubaInstant(SnmpPlugin):
             else:
                 getdata['standalone'] = True
 
-        use_case = 'an individual InstantAP' if getdata['standalone'] \
-            else 'a Virtual Controller'
+        use_case = ('an individual InstantAP' if getdata['standalone']
+                    else 'a Virtual Controller')
         log.info('Modeling %s as %s', device.id, use_case)
 
         # Can't assemble the ObjectMap yet, have to find VC AP in AP table
@@ -294,8 +294,8 @@ class ArubaInstant(SnmpPlugin):
                 channel = row.get('channel', '')
                 width_code = channel[-1]
                 row['width'] = '{0} MHz'.format(width_map.get(width_code, 20))
-                row['channel'] = channel[:-1] if width_code in width_map \
-                    else channel
+                row['channel'] = (channel[:-1] if width_code in width_map
+                                  else channel)
 
                 row['band'] = 'Unknown'
                 row['band_short'] = '?'
