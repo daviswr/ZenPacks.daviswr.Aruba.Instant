@@ -1,7 +1,13 @@
-# pylint: disable=line-too-long,protected-access
+# pylint: disable=line-too-long,protected-access,broad-except
+
+import logging
+LOG = logging.getLogger('zen.nmapCommandParser')
+
+import re
 
 from lxml import etree
 
+from Products.ZenEvents import Event
 from Products.ZenRRD.CommandParser import CommandParser
 from Products.ZenStatus.nmap.PingResult import PingResult
 
@@ -41,26 +47,58 @@ class nmap(CommandParser):
         """
 
         values = dict()
+        lazy_ip_re = r'args=.*\s((?:\d{1,3}\.){3}\d{1,3})'
+        matches = re.findall(lazy_ip_re, cmd.result.output)
+        # IP of the target component, rather than the name,
+        # might be the best we can get from here
+        comp_ip = matches[0] if matches else ''
 
         # Nmap XML output with CLI parameters from
         # ZenStatus.NmapPingTask._executeNmapCmd()
-        parse_tree = etree.fromstring(cmd.result.output)
-        host_tree = parse_tree.xpath('/nmaprun/host')
-        # host_tree will be an empty list if host is down
-        if host_tree:
-            ping = PingResult('')
-            ping._address = ping._parseAddress(host_tree[0])
-            ping._isUp, reason = ping._parseState(host_tree[0])
-            ping._rtt, ping._rttVariance = ping._parseTimes(host_tree[0])
+        try:
+            parse_tree = etree.fromstring(cmd.result.output)
+            host_tree = parse_tree.xpath('/nmaprun/host')
+            # host_tree will be an empty list if host is down
+            if host_tree:
+                ping = PingResult('')
+                ping._address = ping._parseAddress(host_tree[0])
+                ping._isUp = ping._parseState(host_tree[0])[0]
+                ping._rtt, ping._rttVariance = ping._parseTimes(host_tree[0])
 
-            # AP status polling should inform if the AP is down,
-            # though the up/clear event may not be reliable.
-            # AP up/down traps from the Virtual Controller lack AP name
-            # and therefore aren't of much use.
-            values['rtt'] = ping.rtt
-            values['status'] = 1
-        else:
-            values['status'] = 2
+                # AP status polling should inform if the AP is down,
+                # though the up/clear event may not be reliable.
+                # AP up/down traps from the Virtual Controller lack AP name
+                # and therefore aren't of much use.
+                values['rtt'] = ping.rtt
+                values['status'] = 1
+            else:
+                values['status'] = 2
+
+            result.events.append({
+                'device': cmd.deviceConfig.device,
+                'component': comp_ip,
+                'severity': Event.Clear,
+                'eventKey': 'nmap',
+                'eventClass': '/Status/Perf',
+                'summary': 'Command executed successfully',
+                })
+
+        except Exception as error:
+            summary = error.msg if hasattr(error, 'msg') else str(error)
+            LOG.error('Dev: {0}\nCmd: {1}\nOut:{2}\nErr:{3}'.format(
+                cmd.deviceConfig.device,
+                cmd.command,
+                cmd.result.output,
+                summary
+                ))
+            result.events.append({
+                'device': cmd.deviceConfig.device,
+                'component': comp_ip,
+                'severity': Event.Error,
+                'eventKey': 'nmap',
+                'eventClass': '/Status/Perf',
+                'summary': summary,
+                })
 
         for point in cmd.points:
             if point.id in values:
