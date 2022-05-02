@@ -356,6 +356,9 @@ class ArubaInstant(SnmpPlugin):
         # getting title of its self-AP component
         if 'title' in getdata:
             del getdata['title']
+        # Don't have SNMP index and only know about one AP's radios
+        if 'snmpindex' not in getdata and len(ap_radios) == 1:
+            getdata['snmpindex'] = list(ap_radios.keys())[0]
 
         maps.append(ObjectMap(
             modname='ZenPacks.daviswr.Aruba.Instant.VirtualController',
@@ -389,21 +392,27 @@ class ArubaInstant(SnmpPlugin):
             )
 
         # Model as standalone AP - Only radios as components
-        if getdata.get('standalone', False):
+        if getdata.get('standalone', False) and ap_radios:
             ap = getdata
 
-            for radio_index in ap_radios[ap['snmpindex']]:
-                radio = ap_radios[ap['snmpindex']][radio_index]
-                radio['id'] = self.prepId('Radio_{0}'.format(radio_index))
-                radio['title'] = 'Radio {0}'.format(radio_index)
-                standalone_radio_rm.append(ObjectMap(
-                    modname='ZenPacks.daviswr.Aruba.Instant.InstantRadio',
-                    data=radio
-                    ))
-            maps.append(standalone_radio_rm)
-            # Need empty AP RelMap to remove lingering APs
-            # if previously modeled as a Controller
-            maps.append(ap_rm)
+            if 'snmpindex' in ap:
+                for radio_index in ap_radios[ap['snmpindex']]:
+                    radio = ap_radios[ap['snmpindex']][radio_index]
+                    radio['id'] = self.prepId('Radio_{0}'.format(radio_index))
+                    radio['title'] = 'Radio {0}'.format(radio_index)
+                    standalone_radio_rm.append(ObjectMap(
+                        modname='ZenPacks.daviswr.Aruba.Instant.InstantRadio',
+                        data=radio
+                        ))
+                maps.append(standalone_radio_rm)
+                # Need empty AP RelMap to remove lingering APs
+                # if previously modeled as a Controller
+                maps.append(ap_rm)
+            else:
+                log.warn(
+                    'Unable to get SNMP index for standalone AP %s',
+                    device.id
+                    )
 
         # Model as Virtual Controller - APs as components
         else:
